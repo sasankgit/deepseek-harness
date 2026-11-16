@@ -11,7 +11,7 @@ import type {} from '@deepseek-ai/dsh-fs'
 import { buildWindow, formatReadOutput, langFromPath, readMetaFromMeta } from './read-render.ts'
 import { resolveRegularReadTarget } from './read-target.ts'
 
-/** Default and maximum number of lines returned by one `read` call (the `readLimit` config). */
+/** Default number of lines requested by one `read` call (the `readLimit` config). */
 export const READ_LIMIT = 2000
 
 /**
@@ -22,7 +22,7 @@ export const STREAM_MIN_SIZE = 10 * 1024 * 1024
 
 /** Resolved read-tool caps — plugin config after defaulting (see `Config` in index.ts). */
 export interface ReadToolCaps {
-  /** Default and maximum number of lines returned by one call. */
+  /** Default number of lines requested by one call. */
   limit: number
   /** Maximum characters returned for a single line. */
   maxLineLength: number
@@ -56,7 +56,6 @@ export function parseReadArgs(args: { file_path: string; offset?: number; limit?
   if (args.file_path.trim().length === 0) throw new Error('file_path must be a non-empty string')
   const offset = args.offset === undefined ? 1 : parsePositiveInteger(args.offset, 'offset')
   const limit = args.limit === undefined ? maxLimit : parsePositiveInteger(args.limit, 'limit')
-  if (limit > maxLimit) throw new Error(`limit must be less than or equal to ${maxLimit}`)
   return { filePath: args.file_path, offset, limit }
 }
 
@@ -80,7 +79,7 @@ export function applyReadTool(ctx: Context, caps: ReadToolCaps): void {
     parameters: {
       file_path: { type: 'string', required: true, description: 'Path to read, resolved by the filesystem backend.' },
       offset: { type: 'number', description: '1-based first line to return. Defaults to 1.' },
-      limit: { type: 'number', description: `Maximum number of lines to return. Defaults to ${caps.limit}.` },
+      limit: { type: 'number', description: `Maximum number of lines requested. Defaults to ${caps.limit}; explicit limits may be larger. Output is also bounded by the configured byte cap; use offset to continue.` },
     },
     output: {
       schema: {

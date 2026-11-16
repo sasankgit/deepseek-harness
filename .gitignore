@@ -40,6 +40,10 @@ apps/web/dist/
 .artifacts/
 .dsh-build/
 .dsh-report/
+.dsh/
+/firecrawl.env
+/ngrok.env
+/tools/
 .playwright-mcp/
 .orig
 .worktrees/

@@ -35,7 +35,7 @@ export interface Config {
   edit?: boolean
   /** Register `apply_patch` and its guidance beside `edit`. Defaults to false; shipped compositions set it on their `tool-fs` rows. */
   applyPatch?: boolean
-  /** Default and maximum number of lines returned by one `read` call. */
+  /** Default number of lines requested by one `read` call; explicit limits may be larger. */
   readLimit?: number
   /** Maximum characters returned for a single line before truncation. */
   readMaxLineLength?: number

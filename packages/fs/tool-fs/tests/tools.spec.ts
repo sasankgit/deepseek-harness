@@ -309,11 +309,10 @@ describe('read tool', () => {
     expect(text(result)).toContain('tool execution arguments must be losslessly JSON-serializable')
   })
 
-  it('rejects a limit above the cap', async () => {
+  it('accepts a requested limit above the default', async () => {
     const { ctx } = await setup()
     const result = await call(ctx, 'read', { file_path: 'a.txt', limit: 99999 })
-    expect(result.isError).toBe(true)
-    expect(text(result)).toContain('less than or equal to 2000')
+    expect(result.isError).toBe(false)
   })
 
   it('rejects a blank file_path', async () => {
@@ -785,11 +784,11 @@ describe('read caps are plugin config', () => {
     fs.files.set('key:a.txt', 'one\ntwo\nthree\nfour')
     const result = await call(ctx, 'read', { file_path: 'a.txt' })
     expect(text(result)).toContain('(Showing lines 1-2 of 4. Use offset=3 to continue.)')
-    const overCap = await call(ctx, 'read', { file_path: 'a.txt', limit: 3 })
-    expect(overCap.isError).toBe(true)
-    expect(text(overCap)).toContain('less than or equal to 2')
+    const largerPage = await call(ctx, 'read', { file_path: 'a.txt', limit: 3 })
+    expect(largerPage.isError).toBe(false)
+    expect(text(largerPage)).toContain('(Showing lines 1-3 of 4. Use offset=4 to continue.)')
     const readSchema = ctx.tools.schemas().find(s => s.name === 'read')
-    expect(JSON.stringify(readSchema)).toContain('Defaults to 2.')
+    expect(JSON.stringify(readSchema)).toContain('explicit limits may be larger')
   })
 
   it('a configured readMaxLineLength truncates lines at the configured length', async () => {
