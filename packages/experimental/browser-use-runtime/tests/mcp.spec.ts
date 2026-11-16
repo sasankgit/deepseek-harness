@@ -366,9 +366,13 @@ describe('Session MCP Loader composition', () => {
     expect(renderPrompt(blocked)).not.toContain('BROWSER_FIXTURE_INSTRUCTION')
     expect(renderPrompt(blocked)).toContain('browser-fixture')
     for (const name of ['list_mcp_resources', 'list_mcp_resource_templates', 'read_mcp_resource']) {
-      expect((await resource(ctx, child.agent, name)).isError).toBe(true)
+      const denied = await resource(ctx, child.agent, name)
+      expect(denied.isError).toBe(true)
+      expect(denied.error?.message).toBe('browser-fixture: Session resource-child did not acquire a browser connection. Connected browser owner Session: resource-parent.')
     }
-    expect((await resource(ctx, undefined)).isError).toBe(true)
+    const unowned = await resource(ctx, undefined)
+    expect(unowned.isError).toBe(true)
+    expect(unowned.error?.message).toBe('browser-fixture: browser operation was invoked without a live Session. Run it from the Session that owns the browser. Connected browser owner Session: resource-parent.')
     expect((await events(root)).filter(event => event.event === 'resource')).toEqual([])
     expect((await resource(ctx, child.agent, 'read_mcp_resource', 'docs')).value)
       .toEqual({ contents: [{ uri: 'docs://memo', text: 'Independent document.' }] })
@@ -400,7 +404,9 @@ describe('Session MCP Loader composition', () => {
       name: 'mcp__browser-fixture__parent_only', description: 'A browser operation available only in the parent.', parameters: { type: 'object' },
       output: { schema: { type: 'boolean' }, render: () => [] }, execute: parentOnly,
     })
-    expect((await execute(ctx, child.agent, 'mcp__browser-fixture__parent_only')).isError).toBe(true)
+    const crossSession = await execute(ctx, child.agent, 'mcp__browser-fixture__parent_only')
+    expect(crossSession.isError).toBe(true)
+    expect(crossSession.error?.message).toBe('browser-fixture: browser tool for Session parent was invoked by Session child. Connected browser owner Sessions: parent, child.')
     expect(parentOnly).not.toHaveBeenCalled()
     const parentState = browserState(await resource(ctx, parent.agent))
     const childState = browserState(await resource(ctx, child.agent))
@@ -626,9 +632,14 @@ describe('Session MCP Loader composition', () => {
       },
     })
     expect((await warm(ctx, existing.agent)).tools).toEqual([])
+    const unrecorded = await execute(ctx, existing.agent)
+    expect(unrecorded.isError).toBe(true)
+    expect(unrecorded.error?.message).toBe('browser-fixture: Session existing has no active browser connection. No connected Session owner is currently recorded.')
     const future = await ctx.agents.create({ sessionId: SessionId('future') })
     expect((await warm(ctx, future.agent)).tools.some(tool => tool.name === TOOL)).toBe(true)
-    expect((await execute(ctx, existing.agent)).isError).toBe(true)
+    const withoutConnection = await execute(ctx, existing.agent)
+    expect(withoutConnection.isError).toBe(true)
+    expect(withoutConnection.error?.message).toBe('browser-fixture: Session existing has no active browser connection. Connected browser owner Session: future.')
     expect((await execute(ctx, future.agent)).isError).toBe(false)
   })
 })

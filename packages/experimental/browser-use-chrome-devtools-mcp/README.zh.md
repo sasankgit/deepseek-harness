@@ -37,12 +37,25 @@ kind: "package-reference"
 
 使用 `mode: attach`，并在 `endpoint` 中设置 HTTP(S) 调试 URL 或 WS(S) 浏览器端点，即可操作已有浏览器。新的活动 Session 在初始化时占用附加连接，并持续保留直到卸载。如果连接已被占用，本次激活不使用该浏览器，但继续运行，后续轮次不会重试。连接释放后，新创建或恢复的激活可以获取它。其他 Session 的直接调用会失败。清理只断开连接，保留外部浏览器及其页面。
 
+若要使用已登录的 Chrome 144 或更高版本，请先在 `chrome://inspect/#remote-debugging` 启用远程调试，然后通过权限连接而非端口连接：
+
+```yaml
+- name: '@deepseek-ai/dsh-browser-use'
+- name: '@deepseek-ai/dsh-experimental-browser-use-chrome-devtools-mcp'
+  config:
+    mode: autoConnect
+    channel: stable
+```
+
+Chrome 会询问是否允许每次连接。批准后，该 Session 可控制浏览器，直到连接断开；同一时间只能有一个活动 Session 占用连接。选择与运行中 Chrome 安装相符的通道。
+
 | 字段 | 默认值 | 含义 |
 |---|---|---|
-| `mode` | 必填 | `launch` 或 `attach`，在本次提供方激活期间固定 |
+| `mode` | 必填 | `launch`、`attach` 或 `autoConnect`，在本次提供方激活期间固定 |
 | `headless` | `true` | 启动时不显示窗口 |
 | `executablePath` | 上游发现 | 启动使用的 Chromium 可执行文件 |
 | `endpoint` | attach 时必填 | 已有浏览器调试端点 |
+| `channel` | autoConnect 时必填 | Chrome 通道：`stable`、`beta`、`dev` 或 `canary` |
 | `toolCallTimeoutMs` | MCP 客户端默认值 | 单次调用超时，单位为毫秒 |
 
 [配置目录](../../../docs/config-catalog.zh.md#deepseek-aidsh-experimental-browser-use-chrome-devtools-mcp)列出接受的字段。浏览器模式由 profile 或 preset 选择。

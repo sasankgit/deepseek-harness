@@ -132,8 +132,22 @@
     # Supplying those profiles is exactly what the web Models page does. Which
     # adapters exist is composition; which providers run is the user's settings
     # document.
+    # Bedrock Mantle is preconfigured as an OpenAI Chat Completions route so its
+    # API key can be entered in Models settings; model discovery reads /v1/models.
     - id: llm-pi-ai
       name: '@deepseek-ai/dsh-llm-pi-ai'
+      config:
+        providers:
+          bedrock-mantle:
+            displayName: AWS Bedrock Mantle
+            apiKeyEnv: BEDROCK_MANTLE_API_KEY
+            api: openai-completions
+            baseURL: https://bedrock-mantle.ap-south-1.api.aws/v1
+            models:
+              - id: qwen.qwen3-coder-next
+                name: Qwen3 Coder Next
+                contextWindow: 262144
+                maxTokens: 16384
 
     - id: session-persistence-jsonl
       name: '@deepseek-ai/dsh-session-persistence-jsonl'

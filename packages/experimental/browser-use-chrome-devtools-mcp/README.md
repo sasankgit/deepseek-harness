@@ -37,12 +37,25 @@ Mount both entries before creating or resuming a Session, in a profile compositi
 
 Use `mode: attach` and set `endpoint` to an HTTP(S) debugging URL or WS(S) browser endpoint to operate an existing browser. The new live Session claims the attachment during initialization and retains it until unloading. If the attachment is busy, that activation continues without this browser and does not retry on later turns. After release, a newly created or resumed activation can acquire it. Direct calls from another Session fail. Cleanup disconnects and leaves the external browser and its pages running.
 
+For signed-in Chrome 144 or later, enable remote debugging at `chrome://inspect/#remote-debugging`, then use the permission-based connection instead of a port:
+
+```yaml
+- name: '@deepseek-ai/dsh-browser-use'
+- name: '@deepseek-ai/dsh-experimental-browser-use-chrome-devtools-mcp'
+  config:
+    mode: autoConnect
+    channel: stable
+```
+
+Chrome asks to allow each connection. Approving gives that Session control of the browser until it disconnects; only one live Session can hold the connection at a time. Select the channel that matches the running Chrome installation.
+
 | Field | Default | Meaning |
 |---|---|---|
-| `mode` | required | `launch` or `attach`, fixed for this provider activation |
+| `mode` | required | `launch`, `attach`, or `autoConnect`, fixed for this provider activation |
 | `headless` | `true` | Launch without a visible window |
 | `executablePath` | upstream discovery | Chromium executable for launch |
 | `endpoint` | required for attach | Existing browser debugging endpoint |
+| `channel` | required for autoConnect | Chrome channel: `stable`, `beta`, `dev`, or `canary` |
 | `toolCallTimeoutMs` | MCP client default | Per-call timeout in milliseconds |
 
 The [configuration catalog](../../../docs/config-catalog.md#deepseek-aidsh-experimental-browser-use-chrome-devtools-mcp) lists accepted fields. The profile or preset selects the browser mode.

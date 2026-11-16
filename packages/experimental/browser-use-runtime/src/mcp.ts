@@ -106,6 +106,14 @@ export function mountSessionMcp(ctx: Context, options: SessionMcpOptions): void 
   const clients = new Map<Agent, ClientState>()
   const toolPrefix = `mcp__${options.name}__`
   const resourceTools = new Set(['list_mcp_resources', 'list_mcp_resource_templates', 'read_mcp_resource'])
+  const ownerSessions = (): string[] => [...clients]
+    .filter(([, state]) => state.status === 'ready')
+    .map(([agent]) => String(agent.id))
+  const ownerDetail = (): string => {
+    const owners = ownerSessions()
+    return owners.length === 0 ? ' No connected Session owner is currently recorded.'
+      : ` Connected browser owner Session${owners.length === 1 ? '' : 's'}: ${owners.join(', ')}.`
+  }
   let stopping = false
   let refreshingMasks = false
 
@@ -141,7 +149,7 @@ export function mountSessionMcp(ctx: Context, options: SessionMcpOptions): void 
             if (!exec.name.startsWith(toolPrefix)) return next()
             if (exec.agent !== agent) {
               if (ctx.tools.get(exec.name, exec.agent) !== ctx.tools.get(exec.name, agent)) return next()
-              throw new Error(`${options.name}: browser tool belongs to another Session`)
+              throw new Error(`${options.name}: browser tool for Session ${agent.id} was invoked by Session ${exec.agent?.id ?? '(no live Session)'}.${ownerDetail()}`)
             }
             return next()
           })
@@ -199,8 +207,13 @@ export function mountSessionMcp(ctx: Context, options: SessionMcpOptions): void 
       && (exec.arguments as { server?: unknown }).server === options.name
     if (!exec.name.startsWith(toolPrefix) && !ownResource) return next()
     const agent = exec.agent
-    if (agent === undefined || clients.get(agent)?.status !== 'ready') {
-      throw new Error(`${options.name}: browser tool belongs to another Session`)
+    if (agent === undefined) throw new Error(`${options.name}: browser operation was invoked without a live Session. Run it from the Session that owns the browser.${ownerDetail()}`)
+    const client = clients.get(agent)
+    if (client?.status !== 'ready') {
+      const reason = client?.status === 'blocked'
+        ? `Session ${agent.id} did not acquire a browser connection.`
+        : `Session ${agent.id} has no active browser connection.`
+      throw new Error(`${options.name}: ${reason}${ownerDetail()}`)
     }
     return resources.run(agent, exec.signal, async (_scope, combined) => {
       const original = exec.signal

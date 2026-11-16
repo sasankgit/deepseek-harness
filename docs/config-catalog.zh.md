@@ -926,11 +926,24 @@ export interface Config {
 
 - `inject`: `browserUse` · `agents` · `tools` · `systemPrompt` · `workingDirectory`
 - `refs`: `BrowserMcpConfig` (`@deepseek-ai/dsh-experimental-browser-use-runtime/mcp`)
-- `source`: [`packages/experimental/browser-use-chrome-devtools-mcp/src/index.ts:15`](../packages/experimental/browser-use-chrome-devtools-mcp/src/index.ts)
+- `source`: [`packages/experimental/browser-use-chrome-devtools-mcp/src/index.ts:36`](../packages/experimental/browser-use-chrome-devtools-mcp/src/index.ts)
 
 ```ts config-catalog
-/** Fixed Chromium launch or existing-browser attachment settings. */
-export type Config = BrowserMcpConfig
+/** Browser settings after schema defaults have been applied. */
+type ResolvedConfig = BrowserMcpConfig | AutoConnectConfig
+
+/** Connect to a running Chrome instance through its permission-based debugging handshake. */
+interface AutoConnectConfig {
+  /** Connect through Chrome's remote-debugging permission dialog. */
+  mode: 'autoConnect'
+  /** Chrome installation channel to locate for the auto-connect handshake. */
+  channel: ChromeChannel
+  /** Per-call timeout in milliseconds; omission uses the MCP client default. */
+  toolCallTimeoutMs?: number
+}
+
+/** Chrome channels supported by the upstream auto-connect handshake. */
+type ChromeChannel = 'stable' | 'beta' | 'dev' | 'canary'
 ```
 <!-- END GENERATED config-catalog:@deepseek-ai/dsh-experimental-browser-use-chrome-devtools-mcp -->
 
@@ -4024,7 +4037,7 @@ export interface Config {
   edit?: boolean
   /** Register `apply_patch` and its guidance beside `edit`. Defaults to false; shipped compositions set it on their `tool-fs` rows. */
   applyPatch?: boolean
-  /** Default and maximum number of lines returned by one `read` call. */
+  /** Default number of lines requested by one `read` call; explicit limits may be larger. */
   readLimit?: number
   /** Maximum characters returned for a single line before truncation. */
   readMaxLineLength?: number

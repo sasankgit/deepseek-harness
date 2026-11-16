@@ -35,7 +35,7 @@ A busy attachment skips startup permanently for that live activation while its o
 
 Callers can inspect prompt assembly and scoped tool definitions after awaited Agent creation or resume completes.
 
-Browser tools and resource requests targeting this server use the same queue and require the calling Session's own connection. Other MCP servers remain usable. Inherited server instructions are omitted without ownership; the shared server-name inventory keeps its normal scope behavior.
+Browser tools and resource requests targeting this server use the same queue and require the calling Session's own connection. Ownership errors report the requested Session and any connected browser-owner Session IDs; calls without a live Session are identified separately. Other MCP servers remain usable. Inherited server instructions are omitted without ownership; the shared server-name inventory keeps its normal scope behavior.
 
 -----
 

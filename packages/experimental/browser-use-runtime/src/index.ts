@@ -152,7 +152,8 @@ export class SessionResources<T> {
     const current = this.entries.get(agent)
     if (current !== undefined) return current
     if (this.options.exclusive && this.entries.size > 0) {
-      throw new Error(`${this.options.label}: attached browser is already reserved by another Session`)
+      const owners = [...this.entries.keys()].map(owner => String(owner.id))
+      throw new Error(`${this.options.label}: attached browser is already reserved by Session${owners.length === 1 ? '' : 's'} ${owners.join(', ')}`)
     }
     if (!this.ownerCleanups.has(agent)) {
       const cleanup = agent.ctx.effect(() => async () => {
